@@ -7,7 +7,7 @@ trigger:
       - '*'
 
 pool:
-  name: SelfHostedPool  # Use self-hosted agent pool
+  name: SelfHostedPool  # Use my own self-hosted agent pool
 
 variables:
   solution: 'MyCalculatorApp/MyCalculatorApp.sln'  # Path to the solution file
@@ -57,7 +57,7 @@ stages:
     - task: SonarQubePrepare@5
       displayName: 'Prepare SonarQube Analysis'
       inputs:
-        SonarQube: 'SonarQube'  # Must match the service connection name
+        SonarQube: 'SonarQube'  # Updated to use the service connection name
         scannerMode: 'MSBuild'
         projectKey: 'CalculatorApp'
         projectName: 'CalculatorApp'
