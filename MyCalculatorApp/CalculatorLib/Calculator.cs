@@ -10,5 +10,6 @@
             if (b == 0) throw new ArgumentException("Cannot divide by zero.");
             return a / b;
         }
+        public double Power(double baseNum, double exponent) => Math.Pow(baseNum, exponent);
     }
 }

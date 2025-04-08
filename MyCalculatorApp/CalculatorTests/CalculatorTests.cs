@@ -42,5 +42,10 @@ namespace CalculatorTests
             var exception = Assert.Throws<ArgumentException>(() => _calculator.Divide(5, 0));
             Assert.Equal("Cannot divide by zero.", exception.Message);
         }
+        [Fact]
+        public void Power_BaseAndExponent_ReturnsResult()
+        {
+            Assert.Equal(8, _calculator.Power(2, 3));
+        }
     }
 }
