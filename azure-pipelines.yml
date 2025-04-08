@@ -1,0 +1,159 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - '*'
+
+pool:
+  name: SelfHostedPool  # Use self-hosted agent pool
+
+variables:
+  solution: 'MyCalculatorApp/MyCalculatorApp.sln'  # Path to the solution file
+  buildConfiguration: 'Release'
+  artifactName: 'CalculatorAppArtifact'
+
+stages:
+- stage: Build
+  displayName: 'Build and Test Stage'
+  jobs:
+  - job: BuildAndTest
+    displayName: 'Build, Test, and Analyze'
+    steps:
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore NuGet Packages'
+      inputs:
+        command: 'restore'
+        projects: '$(solution)'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Build Project'
+      inputs:
+        command: 'build'
+        projects: '$(solution)'
+        arguments: '--configuration $(buildConfiguration)'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Run Unit Tests'
+      inputs:
+        command: 'test'
+        projects: 'MyCalculatorApp/CalculatorTests/*.csproj'  # Path to the test project
+        arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" --settings MyCalculatorApp/CalculatorTests/coverlet.runsettings'
+
+    - task: PublishCodeCoverageResults@1
+      displayName: 'Publish Code Coverage Results'
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+        reportDirectory: '$(Agent.TempDirectory)/**/html'
+
+    - script: |
+        echo "Checking SonarQube server accessibility..."
+        curl -f http://localhost:9000/api/system/status || echo "SonarQube server is not accessible!"
+      displayName: 'Check SonarQube Server Accessibility'
+      continueOnError: true  # Continue even if this step fails, for debugging
+
+    - task: SonarQubePrepare@5
+      displayName: 'Prepare SonarQube Analysis'
+      inputs:
+        SonarQube: 'SonarQube'  # Must match the service connection name
+        scannerMode: 'MSBuild'
+        projectKey: 'CalculatorApp'
+        projectName: 'CalculatorApp'
+        extraProperties: |
+          sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Build for SonarQube Analysis'
+      inputs:
+        command: 'build'
+        projects: '$(solution)'
+        arguments: '--configuration $(buildConfiguration)'
+
+    - task: SonarQubeAnalyze@5
+      displayName: 'Run SonarQube Analysis'
+
+    - task: SonarQubePublish@5
+      displayName: 'Publish SonarQube Results'
+
+- stage: Deliver
+  displayName: 'Deliver Stage'
+  dependsOn: Build
+  jobs:
+  - job: DeliverArtifact
+    displayName: 'Deliver Artifact'
+    steps:
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish Artifact'
+      inputs:
+        command: 'publish'
+        projects: 'MyCalculatorApp/MyCalculatorApp/*.csproj'  # Path to the console app project
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+        publishWebProjects: false
+        zipAfterPublish: false
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Upload Artifact'
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: '$(artifactName)'
+        publishLocation: 'Container'
+
+- stage: Deploy
+  displayName: 'Deploy Stage'
+  dependsOn: Deliver
+  jobs:
+  - deployment: DeployToDev
+    displayName: 'Deploy to Dev Environment'
+    environment: 'Dev'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: '$(artifactName)'
+          - script: |
+              echo "Deploying to Dev Environment..."
+              cd $(Pipeline.Workspace)/CalculatorAppArtifact
+              dotnet CalculatorApp.dll
+            displayName: 'Deploy and Run in Dev'
+
+  - deployment: DeployToQAT
+    displayName: 'Deploy to QAT Environment'
+    environment: 'QAT'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: '$(artifactName)'
+          - script: |
+              echo "Deploying to QAT Environment (Mock)..."
+            displayName: 'Deploy to QAT (Mock)'
+
+  - deployment: DeployToStaging
+    displayName: 'Deploy to Staging Environment'
+    environment: 'Staging'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: '$(artifactName)'
+          - script: |
+              echo "Deploying to Staging Environment (Mock)..."
+            displayName: 'Deploy to Staging (Mock)'
+
+  - deployment: DeployToProduction
+    displayName: 'Deploy to Production Environment'
+    environment: 'Production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: '$(artifactName)'
+          - script: |
+              echo "Deploying to Production Environment (Mock)..."
+            displayName: 'Deploy to Production (Mock)'
