@@ -47,5 +47,17 @@ namespace CalculatorTests
         {
             Assert.Equal(8, _calculator.Power(2, 3));
         }
+        [Fact]
+        public void SquareRoot_PositiveNumber_ReturnsResult()
+        {
+            Assert.Equal(4, _calculator.SquareRoot(16));
+        }
+
+        [Fact]
+        public void SquareRoot_NegativeNumber_ThrowsException()
+        {
+            var exception = Assert.Throws<ArgumentException>(() => _calculator.SquareRoot(-1));
+            Assert.Equal("Cannot calculate square root of a negative number.", exception.Message);
+        }
     }
 }

@@ -11,5 +11,10 @@
             return a / b;
         }
         public double Power(double baseNum, double exponent) => Math.Pow(baseNum, exponent);
+        public double SquareRoot(double num)
+        {
+            if (num < 0) throw new ArgumentException("Cannot calculate square root of a negative number.");
+            return Math.Sqrt(num);
+        }
     }
 }
