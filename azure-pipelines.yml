@@ -7,7 +7,7 @@ trigger:
       - '*'
 
 pool:
-  name: SelfHostedPool  # Use my own self-hosted agent pool
+  name: SelfHostedPool  # Use my self-hosted agent pool
 
 variables:
   solution: 'MyCalculatorApp/MyCalculatorApp.sln'  # Path to the solution file
@@ -63,6 +63,7 @@ stages:
         projectName: 'CalculatorApp'
         extraProperties: |
           sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
+          sonar.branch.autoconfig.disabled=true  # Disable branch analysis
 
     - task: DotNetCoreCLI@2
       displayName: 'Build for SonarQube Analysis'
