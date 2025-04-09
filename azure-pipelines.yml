@@ -54,16 +54,16 @@ stages:
       displayName: 'Check SonarQube Server Accessibility'
       continueOnError: true  # Continue even if this step fails, for debugging
 
-    - task: SonarQubePrepare@5
+    - task: SonarQubePrepare@6  # Upgraded to latest version
       displayName: 'Prepare SonarQube Analysis'
       inputs:
-        SonarQube: 'SonarQube'  # Updated to use the service connection name
+        SonarQube: 'SonarQube'  # Updated to use the new service connection name
         scannerMode: 'MSBuild'
         projectKey: 'CalculatorApp'
         projectName: 'CalculatorApp'
         extraProperties: |
           sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
-          sonar.branch.autoconfig.disabled=true  # Disable branch analysis
+          sonar.branch.autoconfig.disabled=true  # Disable branch analysis for Community Edition
 
     - task: DotNetCoreCLI@2
       displayName: 'Build for SonarQube Analysis'
@@ -72,10 +72,12 @@ stages:
         projects: '$(solution)'
         arguments: '--configuration $(buildConfiguration)'
 
-    - task: SonarQubeAnalyze@5
+    - task: SonarQubeAnalyze@6  # Upgraded to latest version
       displayName: 'Run SonarQube Analysis'
+      inputs:
+        jdkversion: 'JAVA_HOME_17_X64'  # Specify Java 17 to address warning
 
-    - task: SonarQubePublish@5
+    - task: SonarQubePublish@6  # Upgraded to latest version
       displayName: 'Publish SonarQube Results'
 
 - stage: Deliver
