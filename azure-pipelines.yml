@@ -13,6 +13,7 @@ variables:
   solution: 'MyCalculatorApp/MyCalculatorApp.sln'  # Path to the solution file
   buildConfiguration: 'Release'
   artifactName: 'CalculatorAppArtifact'
+  appDllName: 'MyCalculatorApp.dll'  # Define the expected DLL name (update this based on project setup)
 
 stages:
 - stage: Build
@@ -106,10 +107,18 @@ stages:
               artifactName: '$(artifactName)'
               targetPath: '$(Pipeline.Workspace)/CalculatorAppArtifact'
 
+          # Add a debugging step to list the contents of the artifact directory
+          - script: |
+              echo "Listing contents of artifact directory..."
+              dir "$(Pipeline.Workspace)/CalculatorAppArtifact" /s
+            displayName: 'Debug: List Artifact Contents'
+            continueOnError: true  # Continue even if this step fails, for debugging
+
           - script: |
               echo "Deploying to Dev Environment..."
-              cd $(Pipeline.Workspace)/CalculatorAppArtifact
-              dotnet CalculatorApp.dll
+              cd "$(Pipeline.Workspace)/CalculatorAppArtifact"
+              # Use the variable for the DLL name to ensure correctness
+              dotnet "$(appDllName)"
             displayName: 'Deploy and Run in Dev'
 
   - deployment: DeployToQAT
