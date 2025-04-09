@@ -63,7 +63,7 @@ stages:
         projectName: 'CalculatorApp'
         extraProperties: |
           sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
-          sonar.branch.autoconfig.disabled=true  # Disable branch analysis for Community Edition
+  
 
     - task: DotNetCoreCLI@2
       displayName: 'Build for SonarQube Analysis'
