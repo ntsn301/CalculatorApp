@@ -7,10 +7,10 @@ trigger:
       - '*'
 
 pool:
-  name: SelfHostedPool  # Use self-hosted agent pool
+  name: SelfHostedPool  # Use your self-hosted agent pool
 
 variables:
-  solution: 'MyCalculatorApp/MyCalculatorApp.sln'  # Path to the solution file
+  solution: 'MyCalculatorApp/MyCalculatorApp.sln'
   buildConfiguration: 'Release'
   artifactName: 'CalculatorAppArtifact'
 
@@ -38,7 +38,7 @@ stages:
       displayName: 'Run Unit Tests'
       inputs:
         command: 'test'
-        projects: 'MyCalculatorApp/CalculatorTests/*.csproj'  # Path to the test project
+        projects: 'MyCalculatorApp/CalculatorTests/*.csproj'
         arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" --settings MyCalculatorApp/CalculatorTests/coverlet.runsettings'
 
     - task: PublishCodeCoverageResults@1
@@ -49,21 +49,20 @@ stages:
         reportDirectory: '$(Agent.TempDirectory)/**/html'
 
     - script: |
-        echo "Checking SonarQube server accessibility..."
-        curl -f http://localhost:9000/api/system/status || echo "SonarQube server is not accessible!"
-      displayName: 'Check SonarQube Server Accessibility'
-      continueOnError: true  # Continue even if this step fails, for debugging
+        echo "Unsetting branch variables to avoid SonarQube Community Edition errors..."
+        set BUILD_SOURCEBRANCHNAME=
+        set BUILD_SOURCEBRANCH=
+      displayName: 'Unset Branch Variables for SonarQube (Windows)'
 
-    - task: SonarQubePrepare@6  # Upgraded to latest version
+    - task: SonarQubePrepare@6
       displayName: 'Prepare SonarQube Analysis'
       inputs:
-        SonarQube: 'SonarQube'  # Updated to use the new service connection name
+        SonarQube: 'SonarQube'
         scannerMode: 'MSBuild'
         projectKey: 'CalculatorApp'
         projectName: 'CalculatorApp'
         extraProperties: |
           sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
-          sonar.branch.autoconfig.disabled=true  # Disable branch analysis for Community Edition
 
     - task: DotNetCoreCLI@2
       displayName: 'Build for SonarQube Analysis'
@@ -72,12 +71,12 @@ stages:
         projects: '$(solution)'
         arguments: '--configuration $(buildConfiguration)'
 
-    - task: SonarQubeAnalyze@6  # Upgraded to latest version
+    - task: SonarQubeAnalyze@6
       displayName: 'Run SonarQube Analysis'
       inputs:
-        jdkversion: 'JAVA_HOME_17_X64'  # Specify Java 17 to address warning
+        jdkversion: 'JAVA_HOME_17_X64'
 
-    - task: SonarQubePublish@6  # Upgraded to latest version
+    - task: SonarQubePublish@6
       displayName: 'Publish SonarQube Results'
 
 - stage: Deliver
@@ -91,7 +90,7 @@ stages:
       displayName: 'Publish Artifact'
       inputs:
         command: 'publish'
-        projects: 'MyCalculatorApp/MyCalculatorApp/*.csproj'  # Path to the console app project
+        projects: 'MyCalculatorApp/MyCalculatorApp/*.csproj'
         arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
         publishWebProjects: false
         zipAfterPublish: false
