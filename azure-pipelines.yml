@@ -51,13 +51,12 @@ stages:
     - task: SonarQubePrepare@6
       displayName: 'Prepare SonarQube Analysis'
       inputs:
-        SonarQube: 'SonarQube'  # Name of your SonarQube service connection
+        SonarQube: 'SonarQube'
         scannerMode: 'MSBuild'
         projectKey: 'CalculatorApp'
         projectName: 'CalculatorApp'
         extraProperties: |
           sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
-          sonar.branch.name=
 
     - task: DotNetCoreCLI@2
       displayName: 'Build for SonarQube Analysis'
