@@ -48,6 +48,23 @@ stages:
         summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
         reportDirectory: '$(Agent.TempDirectory)/**/html'
 
+    - script: |
+        echo "Checking SonarQube server accessibility..."
+        curl -f http://localhost:9000/api/system/status || echo "SonarQube server is not accessible!"
+      displayName: 'Check SonarQube Server Accessibility'
+      continueOnError: true  # Continue even if this step fails, for debugging
+
+    - task: SonarQubePrepare@6  # Upgraded to latest version
+      displayName: 'Prepare SonarQube Analysis'
+      inputs:
+        SonarQube: 'SonarQube'  # Use the correct service connection name
+        scannerMode: 'MSBuild'
+        projectKey: 'CalculatorApp'
+        projectName: 'CalculatorApp'
+        extraProperties: |
+          sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
+          sonar.branch.autoconfig.disabled=true  # Disable branch analysis for Community Edition
+
 - stage: Deliver
   displayName: 'Deliver Stage'
   dependsOn: Build
@@ -82,8 +99,13 @@ stages:
       runOnce:
         deploy:
           steps:
-          - download: current
-            artifact: '$(artifactName)'
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download Artifact'
+            inputs:
+              buildType: 'current'
+              artifactName: '$(artifactName)'
+              targetPath: '$(Pipeline.Workspace)/CalculatorAppArtifact'
+
           - script: |
               echo "Deploying to Dev Environment..."
               cd $(Pipeline.Workspace)/CalculatorAppArtifact
@@ -97,8 +119,13 @@ stages:
       runOnce:
         deploy:
           steps:
-          - download: current
-            artifact: '$(artifactName)'
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download Artifact'
+            inputs:
+              buildType: 'current'
+              artifactName: '$(artifactName)'
+              targetPath: '$(Pipeline.Workspace)/CalculatorAppArtifact'
+
           - script: |
               echo "Deploying to QAT Environment (Mock)..."
             displayName: 'Deploy to QAT (Mock)'
@@ -110,8 +137,13 @@ stages:
       runOnce:
         deploy:
           steps:
-          - download: current
-            artifact: '$(artifactName)'
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download Artifact'
+            inputs:
+              buildType: 'current'
+              artifactName: '$(artifactName)'
+              targetPath: '$(Pipeline.Workspace)/CalculatorAppArtifact'
+
           - script: |
               echo "Deploying to Staging Environment (Mock)..."
             displayName: 'Deploy to Staging (Mock)'
@@ -123,8 +155,13 @@ stages:
       runOnce:
         deploy:
           steps:
-          - download: current
-            artifact: '$(artifactName)'
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download Artifact'
+            inputs:
+              buildType: 'current'
+              artifactName: '$(artifactName)'
+              targetPath: '$(Pipeline.Workspace)/CalculatorAppArtifact'
+
           - script: |
               echo "Deploying to Production Environment (Mock)..."
             displayName: 'Deploy to Production (Mock)'
