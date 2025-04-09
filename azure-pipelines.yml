@@ -58,7 +58,7 @@ stages:
       displayName: 'Prepare SonarQube Analysis'
       inputs:
         SonarQube: 'SonarQube'  # Updated to use the new service connection name
-        scannerMode: 'MSBuild'
+        scannerMode: 'dotnet'
         projectKey: 'CalculatorApp'
         projectName: 'CalculatorApp'
         extraProperties: |
