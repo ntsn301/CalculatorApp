@@ -13,7 +13,7 @@ variables:
   solution: 'MyCalculatorApp/MyCalculatorApp.sln'  # Path to the solution file
   buildConfiguration: 'Release'
   artifactName: 'CalculatorAppArtifact'
-  appDllName: 'CalculatorApp.dll'  # Define the expected DLL name (update this based on project setup)
+  appDllName: 'CalculatorApp.dll'  # Define the expected DLL name (update this based on your project)
 
 stages:
 - stage: Build
@@ -82,6 +82,13 @@ stages:
         publishWebProjects: false
         zipAfterPublish: false
 
+    # Add a debugging step to list the contents of the artifact staging directory
+    - script: |
+        echo Listing contents of artifact staging directory...
+        dir "$(Build.ArtifactStagingDirectory)" /s
+      displayName: 'Debug: List Artifact Staging Contents'
+      continueOnError: true  # Continue even if this step fails, for debugging
+
     - task: PublishBuildArtifacts@1
       displayName: 'Upload Artifact'
       inputs:
@@ -109,16 +116,23 @@ stages:
 
           # Add a debugging step to list the contents of the artifact directory
           - script: |
-              echo "Listing contents of artifact directory..."
+              echo Listing contents of artifact directory...
               dir "$(Pipeline.Workspace)/CalculatorAppArtifact" /s
             displayName: 'Debug: List Artifact Contents'
             continueOnError: true  # Continue even if this step fails, for debugging
 
+          # Fix the script to use Windows-compatible syntax and handle potential subdirectories
           - script: |
-              echo "Deploying to Dev Environment..."
-              cd "$(Pipeline.Workspace)/CalculatorAppArtifact"
-              # Use the variable for the DLL name to ensure correctness
-              dotnet "$(appDllName)"
+              echo Deploying to Dev Environment...
+              cd "$(Pipeline.Workspace)\CalculatorAppArtifact"
+              if exist "$(appDllName)" (
+                echo Running application...
+                dotnet "$(appDllName)"
+              ) else (
+                echo Error: DLL file "$(appDllName)" not found in directory.
+                dir /s
+                exit /b 1
+              )
             displayName: 'Deploy and Run in Dev'
 
   - deployment: DeployToQAT
@@ -136,7 +150,7 @@ stages:
               targetPath: '$(Pipeline.Workspace)/CalculatorAppArtifact'
 
           - script: |
-              echo "Deploying to QAT Environment (Mock)..."
+              echo Deploying to QAT Environment (Mock)...
             displayName: 'Deploy to QAT (Mock)'
 
   - deployment: DeployToStaging
@@ -154,7 +168,7 @@ stages:
               targetPath: '$(Pipeline.Workspace)/CalculatorAppArtifact'
 
           - script: |
-              echo "Deploying to Staging Environment (Mock)..."
+              echo Deploying to Staging Environment (Mock)...
             displayName: 'Deploy to Staging (Mock)'
 
   - deployment: DeployToProduction
@@ -172,5 +186,5 @@ stages:
               targetPath: '$(Pipeline.Workspace)/CalculatorAppArtifact'
 
           - script: |
-              echo "Deploying to Production Environment (Mock)..."
+              echo Deploying to Production Environment (Mock)...
             displayName: 'Deploy to Production (Mock)'
