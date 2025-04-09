@@ -65,6 +65,21 @@ stages:
           sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
           sonar.branch.autoconfig.disabled=true  # Disable branch analysis for Community Edition
 
+    - task: DotNetCoreCLI@2
+      displayName: 'Build for SonarQube Analysis'
+      inputs:
+        command: 'build'
+        projects: '$(solution)'
+        arguments: '--configuration $(buildConfiguration)'
+
+    - task: SonarQubeAnalyze@6  # Upgraded to latest version
+      displayName: 'Run SonarQube Analysis'
+      inputs:
+        jdkversion: 'JAVA_HOME_17_X64'  # Specify Java 17 to address warning
+
+    - task: SonarQubePublish@6  # Upgraded to latest version
+      displayName: 'Publish SonarQube Results'
+
 - stage: Deliver
   displayName: 'Deliver Stage'
   dependsOn: Build
@@ -107,8 +122,14 @@ stages:
               targetPath: '$(Pipeline.Workspace)/CalculatorAppArtifact'
 
           - script: |
+              echo "Listing contents of artifact directory for debugging..."
+              dir "$(Pipeline.Workspace)/CalculatorAppArtifact"
+            displayName: 'Debug Artifact Directory Contents'
+            continueOnError: true  # Continue even if this step fails, for debugging
+
+          - script: |
               echo "Deploying to Dev Environment..."
-              cd $(Pipeline.Workspace)/CalculatorAppArtifact
+              cd "$(Pipeline.Workspace)/CalculatorAppArtifact"
               dotnet CalculatorApp.dll
             displayName: 'Deploy and Run in Dev'
 
