@@ -7,10 +7,10 @@ trigger:
       - '*'
 
 pool:
-  name: SelfHostedPool  # Use self-hosted agent pool
+  name: SelfHostedPool
 
 variables:
-  solution: 'MyCalculatorApp/MyCalculatorApp.sln'  # Path to the solution file
+  solution: 'MyCalculatorApp/MyCalculatorApp.sln'
   buildConfiguration: 'Release'
   artifactName: 'CalculatorAppArtifact'
 
@@ -57,9 +57,10 @@ stages:
         projectName: 'CalculatorApp'
         extraProperties: |
           sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
+          # DO NOT SET sonar.branch.name — it is not supported in Community Edition
 
     - task: DotNetCoreCLI@2
-      displayName: 'Build for SonarQube Analysis'
+      displayName: 'Rebuild for SonarQube Analysis'
       inputs:
         command: 'build'
         projects: '$(solution)'
