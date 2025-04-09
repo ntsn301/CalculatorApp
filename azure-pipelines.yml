@@ -13,7 +13,7 @@ variables:
   solution: 'MyCalculatorApp/MyCalculatorApp.sln'  # Path to the solution file
   buildConfiguration: 'Release'
   artifactName: 'CalculatorAppArtifact'
-  appDllName: 'MyCalculatorApp.dll'  # Corrected DLL name to match the actual output
+  appDllName: 'CalculatorApp.dll'  # Corrected DLL name to match the actual output
 
 stages:
 - stage: Build
