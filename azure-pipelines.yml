@@ -13,7 +13,7 @@ variables:
   solution: 'MyCalculatorApp/MyCalculatorApp.sln'  # Path to the solution file
   buildConfiguration: 'Release'
   artifactName: 'CalculatorAppArtifact'
-  appDllName: 'CalculatorApp.dll'  # Define the expected DLL name (update this based on your project)
+  appDllName: 'MyCalculatorApp.dll'  # Corrected DLL name to match the actual output
 
 stages:
 - stage: Build
@@ -78,7 +78,7 @@ stages:
       inputs:
         command: 'publish'
         projects: 'MyCalculatorApp/MyCalculatorApp/*.csproj'  # Path to the console app project
-        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/MyCalculatorApp'  # Output to a subdirectory
         publishWebProjects: false
         zipAfterPublish: false
 
@@ -121,10 +121,10 @@ stages:
             displayName: 'Debug: List Artifact Contents'
             continueOnError: true  # Continue even if this step fails, for debugging
 
-          # Fix the script to use Windows-compatible syntax and handle potential subdirectories
+          # Fix the script to navigate into the correct subdirectory and use the correct DLL name
           - script: |
               echo Deploying to Dev Environment...
-              cd "$(Pipeline.Workspace)\CalculatorAppArtifact"
+              cd "$(Pipeline.Workspace)\CalculatorAppArtifact\MyCalculatorApp"
               if exist "$(appDllName)" (
                 echo Running application...
                 dotnet "$(appDllName)"
