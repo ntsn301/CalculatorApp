@@ -91,7 +91,7 @@ stages:
       displayName: 'Publish Artifact'
       inputs:
         command: 'publish'
-        projects: 'MyCalculatorApp/CalculatorApp/*.csproj'  # Path to the console app project
+        projects: 'MyCalculatorApp/MyCalculatorApp/*.csproj'  # Path to the console app project
         arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
         publishWebProjects: false
         zipAfterPublish: false
