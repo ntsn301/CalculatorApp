@@ -63,7 +63,7 @@ stages:
         projectName: 'CalculatorApp'
         extraProperties: |
           sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
-  
+          sonar.branch.autoconfig.disabled=true  # Disable branch analysis for Community Edition
 
     - task: DotNetCoreCLI@2
       displayName: 'Build for SonarQube Analysis'
@@ -91,7 +91,7 @@ stages:
       displayName: 'Publish Artifact'
       inputs:
         command: 'publish'
-        projects: 'MyCalculatorApp/MyCalculatorApp/*.csproj'  # Path to the console app project
+        projects: 'MyCalculatorApp/CalculatorApp/*.csproj'  # Path to the console app project
         arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
         publishWebProjects: false
         zipAfterPublish: false
