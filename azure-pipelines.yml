@@ -7,10 +7,10 @@ trigger:
       - '*'
 
 pool:
-  name: SelfHostedPool  # Use your self-hosted agent pool
+  name: SelfHostedPool  # Use self-hosted agent pool
 
 variables:
-  solution: 'MyCalculatorApp/MyCalculatorApp.sln'
+  solution: 'MyCalculatorApp/MyCalculatorApp.sln'  # Path to the solution file
   buildConfiguration: 'Release'
   artifactName: 'CalculatorAppArtifact'
 
@@ -48,21 +48,16 @@ stages:
         summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
         reportDirectory: '$(Agent.TempDirectory)/**/html'
 
-    - script: |
-        echo "Unsetting branch variables to avoid SonarQube Community Edition errors..."
-        set BUILD_SOURCEBRANCHNAME=
-        set BUILD_SOURCEBRANCH=
-      displayName: 'Unset Branch Variables for SonarQube (Windows)'
-
     - task: SonarQubePrepare@6
       displayName: 'Prepare SonarQube Analysis'
       inputs:
-        SonarQube: 'SonarQube'
+        SonarQube: 'SonarQube'  # Name of your SonarQube service connection
         scannerMode: 'MSBuild'
         projectKey: 'CalculatorApp'
         projectName: 'CalculatorApp'
         extraProperties: |
           sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
+          sonar.branch.name=
 
     - task: DotNetCoreCLI@2
       displayName: 'Build for SonarQube Analysis'
